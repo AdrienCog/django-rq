@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 import redis
+import rediscluster
 from rq.queue import FailedQueue, Queue
 
 from django_rq import thread_queue
@@ -49,6 +50,9 @@ def get_redis_connection(config, use_strict_redis=False):
     Returns a redis connection from a connection config
     """
     redis_cls = redis.StrictRedis if use_strict_redis else redis.Redis
+
+    if 'CLUSTER' in config:
+        return rediscluster.StrictRedisCluster(startup_nodes=config['CLUSTER'], decode_responses=True)
 
     if 'URL' in config:
         return redis_cls.from_url(config['URL'], db=config.get('DB'))
